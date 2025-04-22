@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Simple Clickable Mall Map</title>
+  <style>
+    svg {
+      width: 100%;
+      max-width: 800px;
+      height: auto;
+      border: 1px solid #ccc;
+    }
+    .area {
+      cursor: pointer;
+      stroke: red;
+      stroke-width: 2;
+      opacity: 0.6;
+    }
+    .area:hover {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Clickable Shopping Center Map</h2>
+  
+  <svg viewBox="0 0 800 600">
+    <!-- Kmart -->
+    <rect x="50" y="50" width="150" height="100" fill="#2b8ed0" class="area" onclick="areaClicked('Kmart')"/>
+    
+    <!-- Big W -->
+    <rect x="220" y="50" width="150" height="100" fill="#ffcc00" class="area" onclick="areaClicked('Big W')"/>
+    
+    <!-- Woolworths -->
+    <rect x="390" y="50" width="150" height="100" fill="#66cc66" class="area" onclick="areaClicked('Woolworths')"/>
+    
+    <!-- Coles -->
+    <rect x="220" y="200" width="150" height="100" fill="#e55611" class="area" onclick="areaClicked('Coles')"/>
+    
+    <!-- ALDI -->
+    <rect x="390" y="200" width="150" height="100" fill="#9c27b0" class="area" onclick="areaClicked('ALDI')"/>
+    
+    <!-- Labels -->
+    <text x="100" y="110" fill="#fff" font-size="16">Kmart</text>
+    <text x="270" y="110" fill="#000" font-size="16">Big W</text>
+    <text x="430" y="110" fill="#000" font-size="16">Woolworths</text>
+    <text x="270" y="260" fill="#fff" font-size="16">Coles</text>
+    <text x="430" y="260" fill="#fff" font-size="16">ALDI</text>
+  </svg>
+
+  <script>
+    function areaClicked(name) {
+      console.log("Clicked area:", name);
+    }
+  </script>
+
+</body>
+</html>
