@@ -52,8 +52,18 @@
   <script>
     function areaClicked(name) {
       console.log("Clicked area:", name);
+      
+      // Send message to parent window (like Bubble.io)
+      window.parent.postMessage(
+        {
+          type: "map_click",
+          value: name
+        },
+        "*"
+      );
     }
   </script>
+  
 
 </body>
 </html>
