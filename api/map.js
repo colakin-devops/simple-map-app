@@ -11,7 +11,7 @@ module.exports = async (req, res) => {
     const $ = cheerio.load(body);
 
     // Fix map container size
-    $('#mapDiv').css({ width: '80%', height: '100vh' });
+    $('#mapDiv').css({ width: '100%', height: '100vh' });
 
     // Rewriting resource URLs
     $('link[href], script[src], img[src], iframe[src]').each((_, el) => {
