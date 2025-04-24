@@ -10,9 +10,15 @@ module.exports = async (req, res) => {
 
     const $ = cheerio.load(body);
 
-    // Fix map container size
-    $('#mapDiv').css({ width: '100%', height: '100%' });
-
+    $('#mapDiv').css({
+      width: '100%',
+      height: '100vh',
+      overflow: 'hidden',
+      position: 'fixed',
+      top: 0,
+      left: 0,
+    });
+    
     // Rewriting resource URLs
     $('link[href], script[src], img[src], iframe[src]').each((_, el) => {
       const attr = el.name === 'link' ? 'href' : 'src';
