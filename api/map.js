@@ -2,7 +2,12 @@ const request = require('request');
 const cheerio = require('cheerio');
 
 const targetBase = 'https://maps.abuzzinteractive.net';
-const mapPath = '/cockburnGateway/_demo55Grp.html';
+// Default mapping
+const mapMappings = {
+  cockburnGateway: '/cockburnGateway/_demo55Grp.html',
+  dapto: '/dapto/_demo55Grp.html',
+};
+
 // Whitelist your Bubble app origin
 const allowedOrigin = 'https://gpt.spotinspect.tech';
 
@@ -18,6 +23,10 @@ module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') {
     return res.status(204).end();
   }
+
+  // Get property from query parameter
+  const property = req.query.property || 'cockburnGateway';
+  const mapPath = mapMappings[property] || mapMappings.cockburnGateway;
 
   // Proxy the map HTML
   request(
