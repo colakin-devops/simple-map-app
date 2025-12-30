@@ -6,6 +6,8 @@ const targetBase = 'https://maps.abuzzinteractive.net';
 const mapMappings = {
   cockburnGateway: '/cockburnGateway/_demo55Grp.html',
   dapto: '/dapto/_demo55Grp.html',
+  parkmore: '/parkmore/_demo55Grp.html',
+  malvernCentral: '/malvernCentral/_demo55Grp.html',
 };
 
 // Whitelist your Bubble app origin
