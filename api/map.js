@@ -9,6 +9,7 @@ const mapMappings = {
   parkmore: '/parkmore/_demo55Grp.html',
   malvernCentral: '/malvernCentral/_demo55Grp.html',
   marrickvilleMetro: '/marrickvilleMetro/_demo55Grp.html',
+  chirnsidePark: '/chirnsidePark/_demo55Grp.html',
 };
 
 // Whitelist your Bubble app origin
