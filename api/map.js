@@ -8,6 +8,7 @@ const mapMappings = {
   dapto: '/dapto/_demo55Grp.html',
   parkmore: '/parkmore/_demo55Grp.html',
   malvernCentral: '/malvernCentral/_demo55Grp.html',
+  marrickvilleMetro: '/marrickvilleMetro/_demo55Grp.html',
 };
 
 // Whitelist your Bubble app origin
