@@ -4,14 +4,16 @@ const port = process.env.PORT || 3000;
 
 // Import your proxy logic
 const mapHandler = require('./api/map');
+const auMapHandler = require('./api/au-map');
 
 // Root route to test deployment
 app.get('/', (req, res) => {
-  res.send('✅ Server is running! Use /api/map to view the map.');
+  res.send('✅ Server is running! Use /api/map or /api/au-map to view the map.');
 });
 
 // Proxy route
 app.get('/api/map', mapHandler);
+app.get('/api/au-map', auMapHandler);
 
 // Start server
 app.listen(port, () => {
