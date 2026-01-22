@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asset Explorer</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f7f8fa;
+            color: #333;
+            overflow-x: hidden;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: row;
+            width: 100%;
+            height: 100vh;
+            min-height: 600px;
+        }
+
+        .map-section {
+            background: #2d7699;
+            flex: 2;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .state-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            padding: 12px;
+            background: rgb(45 118 153);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            flex-wrap: wrap;
+        }
+
+        .state-tab {
+            padding: 8px 14px;
+            background: #f0f4f8;
+            border: 2px solid transparent;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            font-size: 14px;
+        }
+
+        .state-tab:hover {
+            background: #e0e8f0;
+        }
+
+        .state-tab.active {
+            background: #2d7699;
+            color: white;
+            border-color: white;
+        }
+
+        #map {
+            flex: 1;
+            width: 100%;
+            min-height: 500px;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        #map.show {
+            opacity: 1;
+        }
+
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px 50px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            z-index: 2000;
+            text-align: center;
+            transition: opacity 0.3s ease;
+        }
+
+        .loading.fade-out {
+            opacity: 0;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #2d7699;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loading-text {
+            color: #333;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        @media (max-width: 900px) {
+            .container {
+                flex-direction: column;
+                height: auto;
+            }
+
+            #map {
+                height: 55vh;
+                min-height: 400px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            #map {
+                height: 50vh;
+                min-height: 300px;
+            }
+
+            .state-tabs {
+                gap: 5px;
+                padding: 8px;
+            }
+
+            .state-tab {
+                padding: 6px 10px;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="map-section">
+            <div class="state-tabs" id="stateTabs"></div>
+            <div id="map"></div>
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <div class="loading-text">Loading map...</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        let map = null;
+        let initAttempts = 0;
+        const MAX_ATTEMPTS = 5;
+        const MIN_LOADING_TIME = 5000; // 5 seconds minimum loading time
+        let loadingStartTime = Date.now();
+
+        // Multiple initialization triggers for reliability
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', tryInitMap);
+        } else {
+            tryInitMap();
+        }
+
+        window.addEventListener('load', function () {
+            setTimeout(tryInitMap, 100);
+        });
+
+        // Hide loading with minimum time guarantee
+        function hideLoading() {
+            const elapsedTime = Date.now() - loadingStartTime;
+            const remainingTime = MIN_LOADING_TIME - elapsedTime;
+
+            if (remainingTime > 0) {
+                setTimeout(function () {
+                    fadeOutLoading();
+                }, remainingTime);
+            } else {
+                fadeOutLoading();
+            }
+        }
+
+        function fadeOutLoading() {
+            const loadingEl = document.getElementById('loading');
+            const mapEl = document.getElementById('map');
+
+            // Fade out spinner
+            loadingEl.classList.add('fade-out');
+
+            // After fade out completes, hide spinner and show map
+            setTimeout(function () {
+                loadingEl.style.display = 'none';
+                mapEl.classList.add('show');
+            }, 300);
+        }
+
+        // Retry mechanism
+        function tryInitMap() {
+            if (map !== null) return; // Already initialized
+
+            initAttempts++;
+
+            // Check if container is ready and has dimensions
+            const mapContainer = document.getElementById('map');
+            if (!mapContainer || mapContainer.offsetWidth === 0 || mapContainer.offsetHeight === 0) {
+                if (initAttempts < MAX_ATTEMPTS) {
+                    console.log('Map container not ready, retrying... (attempt ' + initAttempts + ')');
+                    setTimeout(tryInitMap, 200);
+                } else {
+                    document.getElementById('loading').innerHTML = 'Please wait : Container getting ready<br><button onclick="location.reload()">Reload</button>';
+                }
+                return;
+            }
+
+            // Check if Leaflet is loaded
+            if (typeof L === 'undefined') {
+                if (initAttempts < MAX_ATTEMPTS) {
+                    console.log('Leaflet not loaded, retrying... (attempt ' + initAttempts + ')');
+                    setTimeout(tryInitMap, 200);
+                } else {
+                    document.getElementById('loading').innerHTML = 'Please wait : Container getting ready<br><button onclick="location.reload()">Reload</button>';
+                }
+                return;
+            }
+
+            initMap();
+        }
+
+        function initMap() {
+            try {
+                const mapContainer = document.getElementById('map');
+
+                // Clear any existing map instance
+                if (map !== null) {
+                    map.remove();
+                    map = null;
+                }
+
+                // Clear the container completely
+                mapContainer.innerHTML = '';
+
+                // Initialize map with error handling
+                const isMobile = window.innerWidth <= 600;
+                map = L.map('map', {
+                    preferCanvas: true,
+                    renderer: L.canvas()
+                }).setView(
+                    isMobile ? [-37, 133] : [-30, 135],
+                    isMobile ? 3.2 : 4
+                );
+
+                // Add tiles with error handling
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap',
+                    maxZoom: 19,
+                    errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='
+                }).addTo(map);
+
+                // Force map to recalculate size after a short delay
+                setTimeout(function () {
+                    if (map) {
+                        map.invalidateSize();
+                    }
+                }, 100);
+
+                // Hide loading with minimum 5 second display
+                hideLoading();
+
+                // Data
+                const regions = {
+                    NSW: [-33.86, 151.21],
+                    VIC: [-37.81, 144.96],
+                    QLD: [-27.47, 153.03],
+                    WA: [-31.95, 115.86]
+                };
+
+                const properties = [
+                    { id: '1752064142607x477912603216838660', name: 'Macquarie', address: 'Herring Road &, Waterloo Rd, Macquarie Park NSW', state: 'NSW', coords: [-33.7767, 151.1168] },
+                    { id: '1737005956038x269183790900051970', name: 'Cockburn', address: '816 Beeliar Dr, Success WA 6164', state: 'WA', coords: [-32.125, 115.856] },
+                    { id: '1737005444037x293986911361957900', name: 'Belmont', address: '227 Belmont Ave, Cloverdale WA 6105', state: 'WA', coords: [-31.9675, 115.9335] },
+                    { id: '1705970323469x242153831563788300', name: 'Karrinyup', address: '200 Karrinyup Rd, Karrinyup WA 6018', state: 'WA', coords: [-31.877, 115.792] },
+                    { id: '1705970216259x119853575471890430', name: 'Pacific Fair', address: '2 Hooker Blvd, Broadbeach Waters QLD 4218', state: 'QLD', coords: [-28.033, 153.431] },
+                    { id: '1705970105830x144446167162290180', name: 'Charlestown Square', address: '30 Pearson St, Charlestown NSW 2290', state: 'NSW', coords: [-32.9667, 151.6922] },
+                    { id: '1705970046647x973616148815020000', name: 'Dapto', address: 'Moombara St, Dapto NSW 2530', state: 'NSW', coords: [-34.4936, 150.7925] },
+                    { id: '1705969982933x900932121804406800', name: 'Marrickville', address: '20 Smidmore St, Marrickville NSW 2204', state: 'NSW', coords: [-33.9108, 151.1607] },
+                    { id: '1705969925472x439016667081605100', name: 'Rouse Hill Town Centre', address: '10/14 Market Ln, Rouse Hill NSW 2155', state: 'NSW', coords: [-33.682, 150.915] },
+                    { id: '1705969860406x123684899286155260', name: 'Malvern Central', address: '110-122 Wattletree Rd, Armadale VIC 3144', state: 'VIC', coords: [-37.861, 145.019] },
+                    { id: '1705969746148x341989798652149760', name: 'Melbourne Central', address: 'Cnr LaTrobe and Swanston Streets, Melbourne VIC 3000', state: 'VIC', coords: [-37.811, 144.962] },
+                    { id: '1705969412613x353156401866735600', name: 'Chirnside Park', address: '239 Maroondah Hwy, Chirnside Park VIC 3116', state: 'VIC', coords: [-37.75, 145.3] },
+                    { id: '1705969363884x356472180792098800', name: 'Parkmore', address: '317 Cheltenham Rd, Keysborough VIC 3173', state: 'VIC', coords: [-37.992, 145.161] },
+                    { id: '1691566594802x553889939715949400', name: 'Highpoint', address: '120-200 Rosamond Rd, Maribyrnong VIC 3032', state: 'VIC', coords: [-37.77, 144.887] }
+                ];
+
+                let markers = [];
+
+                // Show properties
+                function showProperties(props) {
+                    markers.forEach(m => map.removeLayer(m));
+                    markers = [];
+                    props.forEach(p => {
+                        const m = L.marker(p.coords).addTo(map);
+                        m.bindTooltip('<b>' + p.name + '</b><br>' + p.address);
+                        m.on('click', function () {
+                            window.location.href = 'https://gpt.spotinspect.tech/version-228o4/?v=property&property=' + p.id;
+                        });
+                        markers.push(m);
+                    });
+                }
+
+                // Send message to Bubble
+                function sendMessage(state) {
+                    try {
+                        if (window.parent && window.parent !== window) {
+                            window.parent.postMessage({
+                                type: 'mapsClick',
+                                message: state
+                            }, '*');
+                        }
+                        if (typeof bubble_fn_mapsClick === 'function') {
+                            bubble_fn_mapsClick(state);
+                        }
+                    } catch (e) {
+                        console.log('Message send failed:', e);
+                    }
+                }
+
+                // Create tabs
+                const tabsDiv = document.getElementById('stateTabs');
+
+                // All tab
+                const allTab = document.createElement('div');
+                allTab.className = 'state-tab active';
+                allTab.textContent = 'All';
+                allTab.onclick = function () {
+                    document.querySelectorAll('.state-tab').forEach(t => t.classList.remove('active'));
+                    allTab.classList.add('active');
+                    map.setView([-30, 135], 4);
+                    showProperties(properties);
+                    sendMessage('All');
+                };
+                tabsDiv.appendChild(allTab);
+
+                // State tabs
+                Object.keys(regions).forEach(function (state) {
+                    const tab = document.createElement('div');
+                    tab.className = 'state-tab';
+                    tab.textContent = state;
+                    tab.onclick = function () {
+                        document.querySelectorAll('.state-tab').forEach(t => t.classList.remove('active'));
+                        tab.classList.add('active');
+                        map.setView(regions[state], 7);
+                        showProperties(properties.filter(p => p.state === state));
+                        sendMessage(state);
+                    };
+                    tabsDiv.appendChild(tab);
+                });
+
+                // Show all initially
+                showProperties(properties);
+
+                // Listen for messages
+                window.addEventListener('message', function (e) {
+                    if (e.data && e.data.type === 'mapsClick') {
+                        console.log('Received:', e.data.message);
+                    }
+                });
+
+                // Handle window resize
+                window.addEventListener('resize', function () {
+                    if (map) {
+                        setTimeout(function () {
+                            map.invalidateSize();
+                        }, 100);
+                    }
+                });
+
+            } catch (err) {
+                console.error('Init error:', err);
+                document.getElementById('loading').innerHTML = 'Map getting ready: ' + err.message + '<br><button onclick="location.reload()">Reload</button>';
+                map = null;
+            }
+        }
+    </script>
+</body>
+
+</html>
