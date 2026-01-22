@@ -13,12 +13,18 @@ const mapMappings = {
   macarthurSquare: '/macarthurSquare/_demo55Grp.html',
 };
 
-// Whitelist your Bubble app origin
-const allowedOrigin = 'https://gpt.spotinspect.tech';
+// Whitelist origins
+const allowedOrigins = ['https://gpt.spotinspect.tech', 'http://localhost:8000'];
 
 module.exports = async (req, res) => {
   // Set CORS headers
-  res.setHeader('Access-Control-Allow-Origin', allowedOrigin);
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  } else {
+    // Default to the first one if no origin header (e.g. direct browser access)
+    res.setHeader('Access-Control-Allow-Origin', allowedOrigins[0]);
+  }
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   // Allow credentials (cookies, auth headers)
