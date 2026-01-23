@@ -12,6 +12,14 @@ const mapMappings = {
   chirnsidePark: '/chirnsidePark/_demo55Grp.html',
   macarthurSquare: '/macarthurSquare/_demo55Grp.html',
   highpoint: '/highpoint/_demo55Grp.html',
+  macquarie: '/macquarie/_demo55Grp.html',
+  sunshinePlaza: '/sunshinePlaza/_demo55Grp.html',
+  belmont: '/belmont/_demo55Grp.html',
+  karrinyup: '/karrinyup/_demo55Grp.html',
+  pacificFair: '/pacificFair/_demo55Grp.html',
+  charlestownSquare: '/charlestownSquare/_demo55Grp.html',
+  rouseHillTownCentre: '/rouseHillTownCentre/_demo55Grp.html',
+  melbourneCentral: '/melbourneCentral/_demo55Grp.html',
 };
 
 // Whitelist origins
