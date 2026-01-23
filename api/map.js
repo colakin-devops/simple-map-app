@@ -11,6 +11,7 @@ const mapMappings = {
   marrickvilleMetro: '/marrickvilleMetro/_demo55Grp.html',
   chirnsidePark: '/chirnsidePark/_demo55Grp.html',
   macarthurSquare: '/macarthurSquare/_demo55Grp.html',
+  highpoint: '/highpoint/_demo55Grp.html',
 };
 
 // Whitelist origins
