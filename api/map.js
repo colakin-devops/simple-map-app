@@ -15,7 +15,7 @@ const mapMappings = {
   macquarie: '/macquarie/_demo55Grp.html',
   sunshinePlaza: '/sunshinePlaza/_demo55Grp.html',
   belmont: '/belmont/_demo55Grp.html',
-  karrinyup: '/karrinyup/_demo55Grp.html',
+  karrinyupCentre: '/karrinyupCentre/_demo55Grp.html',
   pacificFair: '/pacificFair/_demo55Grp.html',
   charlestownSquare: '/charlestownSquare/_demo55Grp.html',
   rouseHillTownCentre: '/rouseHillTownCentre/_demo55Grp.html',
