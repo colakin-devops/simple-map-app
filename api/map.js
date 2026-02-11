@@ -84,7 +84,7 @@ module.exports = async (req, res) => {
         }
       });
 
-      // Inject click-logging script
+      // Inject click-logging and mobile zoom-out script
       $('body').append(`
         <script>
         (function() {
@@ -95,6 +95,43 @@ module.exports = async (req, res) => {
               window.parent.postMessage({ type: 'mapClick', message: args[0] }, '*');
             }
           };
+
+          // Mobile-specific zoom out adjustment
+          function handleMobileZoom() {
+            // Detect mobile/small screen
+            const isMobile = window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            if (!isMobile) return false;
+            
+            try {
+              if (typeof L !== 'undefined' && L.Map && L.Map._instances) {
+                const instances = Object.values(L.Map._instances);
+                if (instances.length > 0) {
+                  const m = instances[0];
+                  // Allow zooming out further than the default "fit" level
+                  m.options.minZoom = -2; 
+                  // Initial zoom out adjustment
+                  m.setZoom(m.getZoom() - 1); 
+                  console.log('Applied initial zoom out for mobile');
+                  return true;
+                }
+              }
+            } catch (e) {
+              console.error('Zoom adjustment error:', e);
+            }
+            return false;
+          }
+
+          // Wait for map to be ready and stabilized
+          let zoomAdjusted = false;
+          let attempts = 0;
+          const checkInterval = setInterval(() => {
+            attempts++;
+            if (zoomAdjusted || attempts > 20) {
+              clearInterval(checkInterval);
+              return;
+            }
+            zoomAdjusted = handleMobileZoom();
+          }, 1000);
         })();
         </script>
       `);
