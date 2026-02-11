@@ -84,10 +84,10 @@ module.exports = async (req, res) => {
         }
       });
 
-      // Set initial zoom out options for the map engine itself
-      $('script[src*="abuzzmap.js"]').attr('data-fitBoundsOptions', '{"paddingTopLeft":[100,100],"paddingBottomRight":[100,100]}');
+      // Increase the mapping engine's internal padding for a better initial overview
+      $('script[src*="abuzzmap.js"]').attr('data-fitBoundsOptions', '{"paddingTopLeft":[150,150],"paddingBottomRight":[150,150]}');
 
-      // Inject click-logging and robust mobile zoom-out script
+      // Inject robust adjustment script
       $('body').append(`
         <script>
         (function() {
@@ -99,7 +99,6 @@ module.exports = async (req, res) => {
             }
           };
 
-          // Robust map discovery across global scope
           function findLeafletMap() {
             // 1. Try standard Leaflet registry
             if (typeof L !== 'undefined' && L.Map && L.Map._instances) {
@@ -107,53 +106,61 @@ module.exports = async (req, res) => {
               if (instances.length > 0) return instances[0];
             }
             
-            // 2. Scan window for duck-typed Leaflet instances (Abuzz specific fallback)
+            // 2. Try Abuzz specialized global handles
+            if (typeof ABUZZMAPPING !== 'undefined') {
+              for (const k in ABUZZMAPPING) {
+                try {
+                  if (ABUZZMAPPING[k] && typeof ABUZZMAPPING[k].getZoom === 'function' && ABUZZMAPPING[k]._container) return ABUZZMAPPING[k];
+                } catch(e) {}
+              }
+            }
+            
+            // 3. Try searching via markers if available
+            if (window._allDestMarkerRegister) {
+              for (const k in window._allDestMarkerRegister) {
+                if (window._allDestMarkerRegister[k]._mapToAdd) return window._allDestMarkerRegister[k]._mapToAdd;
+              }
+            }
+
+            // 4. Duck-typing search across globals
             for (const key in window) {
               try {
                 const obj = window[key];
-                if (obj && typeof obj.getZoom === 'function' && obj._container && obj._container.classList.contains('leaflet-container')) {
-                  return obj;
-                }
+                if (obj && typeof obj.getZoom === 'function' && obj._container && obj._container.classList.contains('leaflet-container')) return obj;
               } catch (e) {}
             }
             return null;
           }
 
-          function applyMobileZoomFix() {
+          function forceZoomOut() {
             const isMobile = window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-            if (!isMobile) return false;
-
             const map = findLeafletMap();
             if (!map) return false;
 
             try {
-              // Stop any ongoing animations
               if (map.stop) map.stop();
-
-              // Unlock minZoom to allow expansive view
-              map.options.minZoom = -4; 
+              map.options.minZoom = -5;
               
-              // Apply deeper zoom out (2 levels for mobile)
-              const currentZoom = map.getZoom();
-              map.setZoom(currentZoom - 2);
-              map.invalidateSize();
-              
-              console.log('Successfully adjusted mobile initial zoom level.');
+              // Only apply the shift once
+              if (!window._zoomOutApplied) {
+                const zoomShift = isMobile ? 2 : 1;
+                map.setZoom(map.getZoom() - zoomShift);
+                map.invalidateSize();
+                window._zoomOutApplied = true;
+                console.log('Successfully adjusted initial zoom level');
+              }
               return true;
             } catch (e) {
-              console.error('Mobile zoom adjustment failed:', e);
+              console.error('Initial zoom adjustment failed:', e);
             }
             return false;
           }
 
-          // Periodic check to catch the map as it initializes
-          let fixApplied = false;
           let attempts = 0;
-          const retryFix = setInterval(() => {
+          const retryInterval = setInterval(() => {
             attempts++;
-            fixApplied = applyMobileZoomFix();
-            if (fixApplied || attempts > 20) {
-              clearInterval(retryFix);
+            if (forceZoomOut() || attempts > 20) {
+              clearInterval(retryInterval);
             }
           }, 1000);
         })();
