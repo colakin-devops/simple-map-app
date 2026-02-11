@@ -17,7 +17,7 @@ const mapMappings = {
   karrinyupCentre: '/karrinyupCentre/_demo55Grp.html',
   pacificFair: '/pacificFair/_demo55Grp.html',
   charlestownSquare: '/charlestownSquare/_demo55Grp.html',
-  rouseHillTownCentre: '/rouseHillTownCentre/_demo55Grp.html',
+  rouseHill: '/rouseHill/_demo55Grp.html',
   melbourneCentral: '/melbourneCentral/_demo55Grp.html',
   belmontForum: '/belmontForum/_demo55Grp.html'
 };
