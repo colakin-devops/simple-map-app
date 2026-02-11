@@ -84,7 +84,10 @@ module.exports = async (req, res) => {
         }
       });
 
-      // Inject click-logging and mobile zoom-out script
+      // Set initial zoom out options for the map engine itself
+      $('script[src*="abuzzmap.js"]').attr('data-fitBoundsOptions', '{"paddingTopLeft":[100,100],"paddingBottomRight":[100,100]}');
+
+      // Inject click-logging and robust mobile zoom-out script
       $('body').append(`
         <script>
         (function() {
@@ -96,41 +99,62 @@ module.exports = async (req, res) => {
             }
           };
 
-          // Mobile-specific zoom out adjustment
-          function handleMobileZoom() {
-            // Detect mobile/small screen
+          // Robust map discovery across global scope
+          function findLeafletMap() {
+            // 1. Try standard Leaflet registry
+            if (typeof L !== 'undefined' && L.Map && L.Map._instances) {
+              const instances = Object.values(L.Map._instances);
+              if (instances.length > 0) return instances[0];
+            }
+            
+            // 2. Scan window for duck-typed Leaflet instances (Abuzz specific fallback)
+            for (const key in window) {
+              try {
+                const obj = window[key];
+                if (obj && typeof obj.getZoom === 'function' && obj._container && obj._container.classList.contains('leaflet-container')) {
+                  return obj;
+                }
+              } catch (e) {}
+            }
+            return null;
+          }
+
+          function applyMobileZoomFix() {
             const isMobile = window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
             if (!isMobile) return false;
-            
+
+            const map = findLeafletMap();
+            if (!map) return false;
+
             try {
-              if (typeof L !== 'undefined' && L.Map && L.Map._instances) {
-                const instances = Object.values(L.Map._instances);
-                if (instances.length > 0) {
-                  const m = instances[0];
-                  // Allow zooming out further than the default "fit" level
-                  m.options.minZoom = -2; 
-                  // Initial zoom out adjustment
-                  m.setZoom(m.getZoom() - 1); 
-                  console.log('Applied initial zoom out for mobile');
-                  return true;
-                }
-              }
+              // Stop any ongoing animations
+              if (map.stop) map.stop();
+
+              // Unlock minZoom to allow expansive view
+              map.options.minZoom = -4; 
+              
+              // Apply deeper zoom out (2 levels for mobile)
+              const currentZoom = map.getZoom();
+              map.setZoom(currentZoom - 2);
+              map.invalidateSize();
+              
+              console.log('Successfully adjusted mobile initial zoom level.');
+              return true;
             } catch (e) {
-              console.error('Zoom adjustment error:', e);
+              console.error('Mobile zoom adjustment failed:', e);
             }
             return false;
           }
 
-          // Wait for map to be ready and stabilized
-          let zoomAdjusted = false;
+          // Periodic check to catch the map as it initializes
+          let fixApplied = false;
           let attempts = 0;
-          const checkInterval = setInterval(() => {
+          const retryFix = setInterval(() => {
             attempts++;
-            if (zoomAdjusted || attempts > 20) {
-              clearInterval(checkInterval);
-              return;
+            fixApplied = applyMobileZoomFix();
+            if (fixApplied || attempts > 20) {
+              clearInterval(retryFix);
             }
-            zoomAdjusted = handleMobileZoom();
           }, 1000);
         })();
         </script>
