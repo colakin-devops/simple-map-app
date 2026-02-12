@@ -84,8 +84,12 @@ module.exports = async (req, res) => {
         }
       });
 
-      // Increase the mapping engine's internal padding for a better initial overview
-      $('script[src*="abuzzmap.js"]').attr('data-fitBoundsOptions', '{"paddingTopLeft":[150,150],"paddingBottomRight":[150,150]}');
+      // Increase the mapping engine's internal padding for a better initial overview (mobile only)
+      const userAgent = req.headers['user-agent'] || '';
+      const isMobileServer = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+      if (isMobileServer) {
+        $('script[src*="abuzzmap.js"]').attr('data-fitBoundsOptions', '{"paddingTopLeft":[150,150],"paddingBottomRight":[150,150]}');
+      }
 
       // Inject robust adjustment script
       $('body').append(`
@@ -138,16 +142,20 @@ module.exports = async (req, res) => {
             if (!map) return false;
 
             try {
-              if (map.stop) map.stop();
-              map.options.minZoom = -5;
-              
               // Only apply the shift once
               if (!window._zoomOutApplied) {
-                const zoomShift = isMobile ? 2 : 1;
-                map.setZoom(map.getZoom() - zoomShift);
-                map.invalidateSize();
+                if (isMobile) {
+                  if (map.stop) map.stop();
+                  map.options.minZoom = -5;
+                  
+                  const zoomShift = 2;
+                  map.setZoom(map.getZoom() - zoomShift);
+                  map.invalidateSize();
+                  console.log('Successfully adjusted initial zoom level for mobile');
+                } else {
+                  console.log('Desktop detected, skipping zoom adjustment');
+                }
                 window._zoomOutApplied = true;
-                console.log('Successfully adjusted initial zoom level');
               }
               return true;
             } catch (e) {
