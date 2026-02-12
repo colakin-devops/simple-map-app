@@ -88,7 +88,7 @@ module.exports = async (req, res) => {
       const userAgent = req.headers['user-agent'] || '';
       const isMobileServer = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
       if (isMobileServer) {
-        $('script[src*="abuzzmap.js"]').attr('data-fitBoundsOptions', '{"paddingTopLeft":[150,150],"paddingBottomRight":[150,150]}');
+        $('script[src*="abuzzmap.js"]').attr('data-fitBoundsOptions', '{"paddingTopLeft":[100,100],"paddingBottomRight":[100,100]}');
       }
 
       // Inject robust adjustment script
@@ -148,7 +148,7 @@ module.exports = async (req, res) => {
                   if (map.stop) map.stop();
                   map.options.minZoom = -5;
                   
-                  const zoomShift = 2;
+                  const zoomShift = 1;
                   map.setZoom(map.getZoom() - zoomShift);
                   map.invalidateSize();
                   console.log('Successfully adjusted initial zoom level for mobile');
