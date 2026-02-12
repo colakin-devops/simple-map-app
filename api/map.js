@@ -84,93 +84,18 @@ module.exports = async (req, res) => {
         }
       });
 
-      // Increase the mapping engine's internal padding for a better initial overview (mobile only)
-      const userAgent = req.headers['user-agent'] || '';
-      const isMobileServer = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
-      if (isMobileServer) {
-        $('script[src*="abuzzmap.js"]').attr('data-fitBoundsOptions', '{"paddingTopLeft":[100,100],"paddingBottomRight":[100,100]}');
-      }
-
-      // Inject robust adjustment script
+      // Inject message proxy script
       $('body').append(`
         <script>
         (function() {
           const originalLog = console.log;
           console.log = function(...args) {
             originalLog.apply(console, args);
+            // Pass map click events to the parent window
             if (args[0]?.includes?.('Got a click on dest via')) {
               window.parent.postMessage({ type: 'mapClick', message: args[0] }, '*');
             }
           };
-
-          function findLeafletMap() {
-            // 1. Try standard Leaflet registry
-            if (typeof L !== 'undefined' && L.Map && L.Map._instances) {
-              const instances = Object.values(L.Map._instances);
-              if (instances.length > 0) return instances[0];
-            }
-            
-            // 2. Try Abuzz specialized global handles
-            if (typeof ABUZZMAPPING !== 'undefined') {
-              for (const k in ABUZZMAPPING) {
-                try {
-                  if (ABUZZMAPPING[k] && typeof ABUZZMAPPING[k].getZoom === 'function' && ABUZZMAPPING[k]._container) return ABUZZMAPPING[k];
-                } catch(e) {}
-              }
-            }
-            
-            // 3. Try searching via markers if available
-            if (window._allDestMarkerRegister) {
-              for (const k in window._allDestMarkerRegister) {
-                if (window._allDestMarkerRegister[k]._mapToAdd) return window._allDestMarkerRegister[k]._mapToAdd;
-              }
-            }
-
-            // 4. Duck-typing search across globals
-            for (const key in window) {
-              try {
-                const obj = window[key];
-                if (obj && typeof obj.getZoom === 'function' && obj._container && obj._container.classList.contains('leaflet-container')) return obj;
-              } catch (e) {}
-            }
-            return null;
-          }
-
-          function forceZoomOut() {
-            const isMobile = window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-            const map = findLeafletMap();
-            if (!map) return false;
-
-            try {
-              // Only apply the shift once
-              if (!window._zoomOutApplied) {
-                if (isMobile) {
-                  if (map.stop) map.stop();
-                  map.options.minZoom = -5;
-                  
-                  const zoomShift = 1;
-                  map.setZoom(map.getZoom() - zoomShift);
-                  map.invalidateSize();
-                  console.log('Successfully adjusted initial zoom level for mobile');
-                } else {
-                  console.log('Desktop detected, skipping zoom adjustment');
-                }
-                window._zoomOutApplied = true;
-              }
-              return true;
-            } catch (e) {
-              console.error('Initial zoom adjustment failed:', e);
-            }
-            return false;
-          }
-
-          let attempts = 0;
-          const retryInterval = setInterval(() => {
-            attempts++;
-            if (forceZoomOut() || attempts > 20) {
-              clearInterval(retryInterval);
-            }
-          }, 1000);
         })();
         </script>
       `);
