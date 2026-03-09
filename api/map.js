@@ -12,7 +12,7 @@ const mapMappings = {
   chirnsidePark: '/chirnsidePark/_demo55Grp.html',
   macarthurSquare: '/macarthurSquare/_demo55Grp.html',
   highpoint: '/highpoint/_demo55Grp.html',
-  macquarie: '/macquarieCentre/_demo55Grp.html',
+  macquarieCentre: '/macquarieCentre/_demo55Grp.html',
   sunshinePlaza: '/sunshinePlaza/_demo55Grp.html',
   karrinyupCentre: '/karrinyupCentre/_demo55Grp.html',
   pacificFair: '/pacificFair/_demo55Grp.html',
