@@ -1,0 +1,25 @@
+[Unit]
+Description=Simple Map App (Node.js)
+After=network.target
+
+[Service]
+# The user that will run the app
+User=ubuntu
+# The path to your application
+WorkingDirectory=/mnt/data/ffg/maps/services/
+# The command to start your application
+# Note: Ensure /usr/bin/node is the correct path to node or use 'node' if it's in the PATH
+ExecStart=/usr/bin/node index.js
+# Environment variables
+Environment=PORT=3000
+# Auto-restart the app if it crashes or is stopped
+Restart=always
+# Time to wait before restarting
+RestartSec=10
+# Standard output/error logging
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=map-proxy
+
+[Install]
+WantedBy=multi-user.target
