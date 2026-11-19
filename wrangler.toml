@@ -1,8 +1,7 @@
-name = "clk-hiring-portal"
+name = "simple-map-ffg"
 main = "worker/index.js"
-compatibility_date = "2026-11-19"
+compatibility_date = "2026-11-18"
 
 [assets]
 directory = "./public"
 binding = "ASSETS"
-not_found_handling = "single-page-application"
