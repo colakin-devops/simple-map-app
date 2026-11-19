@@ -9,3 +9,4 @@ yarn-error.log*
 *.swp
 *.bak
 .wrangler/
+package-lock.json
