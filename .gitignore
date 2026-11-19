@@ -8,4 +8,4 @@ yarn-error.log*
 .vscode/
 *.swp
 *.bak
-package-lock.json
+.wrangler/
