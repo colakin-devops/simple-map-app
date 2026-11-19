@@ -4,7 +4,7 @@ A web proxy and map application supporting dynamic map rendering, location data 
 
 ---
 
-## Table of Contents
+## Table of Contents 
 
 - [Overview](#overview)
 - [Project Structure](#project-structure)
