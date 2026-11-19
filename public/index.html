@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AU Map Explorer</title>
+
+  <!-- Leaflet Map CSS -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  />
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f5f7fa;
+    }
+
+    .page {
+      width: 100%;
+      padding: 20px;
+    }
+
+    .state-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .state-tab {
+      padding: 10px 16px;
+      background: #ffffff;
+      border: 1px solid #d5dce5;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .state-tab:hover {
+      background: #edf4ff;
+    }
+
+    .state-tab.active {
+      background: #2563eb;
+      color: #ffffff;
+      border-color: #2563eb;
+    }
+
+    #map {
+      width: 100%;
+      height: 75vh;
+      min-height: 450px;
+      border-radius: 10px;
+      overflow: hidden;
+      background: #e5e7eb;
+    }
+
+    #map-loading {
+      padding: 15px;
+      text-align: center;
+      color: #555;
+    }
+
+    @media (max-width: 600px) {
+      .page {
+        padding: 10px;
+      }
+
+      #map {
+        height: 70vh;
+        min-height: 400px;
+      }
+
+      .state-tab {
+        padding: 8px 12px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+
+    <div id="state-tabs" class="state-tabs"></div>
+
+    <div id="map-loading">
+      Loading map...
+    </div>
+
+    <div id="map"></div>
+
+  </div>
+
+  <!-- Leaflet JavaScript -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Your map JavaScript -->
+  <script src="/au-map.js"></script>
+
+  <!-- Initialize map -->
+  <script>
+    window.addEventListener("DOMContentLoaded", function () {
+      window.AuAssetExplorer.init({
+        containerId: "map",
+        tabsContainerId: "state-tabs",
+        apiBaseUrl: "",
+        bubbleCallback: ""
+      });
+    });
+  </script>
+</body>
+</html>

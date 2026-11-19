@@ -34,12 +34,19 @@
     };
 
     async function initMap(options) {
-        const { containerId, apiBaseUrl, bubbleCallback, tabsContainerId } = options;
+        const { containerId, apiBaseUrl = '', bubbleCallback, tabsContainerId } = options;
         const mapContainer = document.getElementById(containerId);
 
         try {
             // Fetch data from backend
             const response = await fetch(`${apiBaseUrl}/api/au-map`);
+            if (!response.ok) {
+                throw new Error(`API returned status ${response.status} (${response.statusText})`);
+            }
+            const contentType = response.headers.get('content-type') || '';
+            if (!contentType.includes('application/json')) {
+                throw new Error(`Expected JSON from /api/au-map, but received content-type "${contentType}". Make sure the API route is configured on your server or Cloudflare Worker.`);
+            }
             const data = await response.json();
             const { regions, properties } = data;
 
