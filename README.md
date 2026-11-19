@@ -239,6 +239,29 @@ npx wrangler secret put SECRET_KEY
 
 ---
 
+## Docker & Docker Compose Deployment
+
+You can run the application containerized using Docker and Docker Compose.
+
+### 1. Build and Run Container
+```bash
+docker compose up -d --build
+```
+
+### 2. View Logs
+```bash
+docker compose logs -f
+```
+
+### 3. Stop Container
+```bash
+docker compose down
+```
+
+The app will be accessible at `http://localhost:3000`.
+
+---
+
 ## VM / Systemd Deployment
 
 If hosting the Express server on an Ubuntu VM rather than Cloudflare:
